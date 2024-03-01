@@ -183,10 +183,12 @@ print("numpy:", numpy_tensor)
 
 # Reproducibility
 # to reduce randomness in neural networks and PyTorch comes the conceept of a random seed
-torch.manual_seed(42) # sets a random seed for reproducibility (works only for one call)
+torch.manual_seed(0) # sets a random seed for reproducibility (does not result in each call to be the same, but each call will be reproducible if the seed is set the same way)
 x = torch.rand(2, 3)
 y = torch.rand(2, 3)
-print(x == y)
+print("x:", x)
+print("y:", y)
+print("x == y:", x == y)
 
 torch.manual_seed(42)
 x = torch.rand(2, 3)
@@ -194,7 +196,57 @@ torch.manual_seed(42) # set seed for each call
 y = torch.rand(2, 3)
 print(x == y)
 
+# Check if CUDA is available
+print(torch.cuda.is_available())
 
+# Setup device agnostic code (run on GPU if available, else run on CPU)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(device)
+
+# Count number of devices
+print(torch.cuda.device_count())
+
+# Get the name of the current GPU
+print(torch.cuda.get_device_name())
+
+# Move tensors to GPU
+tensor = torch.tensor([1, 2, 3]) # default device is cpu
+print(tensor, tensor.device)
+tensor_gpu = tensor.to(device) # .to creates a copy of the tensor on the device
+print(tensor_gpu, tensor_gpu.device)
+tensor_cpu = tensor_gpu.to("cpu") # copy back to cpu (e.g. convert to numpy array if the tensor is on GPU)
+print(tensor_cpu, tensor_cpu.device)
+tensor_cpu.cpu() # another way to move tensor to CPU
+print(tensor_cpu, tensor_cpu.device)
+
+# Excercises
+torch.manual_seed(0)
+random_tensor = torch.rand(7, 7)
+print(random_tensor)
+random_tensor2 = torch.rand(1, 7)
+print(random_tensor2)
+product = torch.mm(random_tensor, random_tensor2.T)
+print(product)
+
+torch.manual_seed(1234)
+tensor_gpu1 = torch.rand(2, 3, device="cuda")
+print(tensor_gpu1)
+tensor_gpu2 = torch.rand(2, 3, device="cuda")
+print(tensor_gpu2)
+product_gpu = torch.mm(tensor_gpu1, tensor_gpu2.T)
+print(product_gpu)
+min_value, max_value = product_gpu.min(), product_gpu.max()
+print(min_value, max_value)
+min_index, max_index = product_gpu.argmin(), product_gpu.argmax()
+print(min_index, max_index)
+
+torch.manual_seed(7)
+tensor = torch.rand(1, 1, 1, 10)
+print(tensor)
+print(tensor.shape)
+tensor_squeezed = torch.squeeze(tensor)
+print(tensor_squeezed)
+print(tensor_squeezed.shape)
 
 
 
