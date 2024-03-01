@@ -132,7 +132,7 @@ with torch.inference_mode(): # turns off gradient tracking -> faster predictions
     
 # Setup loss and optimizer
 loss_fn = nn.L1Loss() # L1 loss (mean absolute error)
-optimizer = torch.optim.SGD(model_0.parameters(), lr=0.01) # lr = learning rate (possibly the most important parameter) # HYPERPARAMETER
+optimizer = torch.optim.SGD(model_0.parameters(), lr=0.001) # lr = learning rate (possibly the most important parameter) # HYPERPARAMETER
 # the smaller the learning rate, the slower the model learns
 
 # Training loop (and testing loop)
@@ -145,7 +145,12 @@ optimizer = torch.optim.SGD(model_0.parameters(), lr=0.01) # lr = learning rate 
 # 5. Optimizer step - use the optimizer to adjust the parameters to reduce the loss (gradient descent)
 
 # An epoch is one loop through the entire dataset
-epochs = 1000 # HYPERPARAMETER
+epochs = 2000 # HYPERPARAMETER
+
+# Track different values
+epoch_count = []
+loss_values = []
+test_loss_values = []
 
 # 0. Loop through the data
 for epoch in range(epochs):
@@ -158,6 +163,7 @@ for epoch in range(epochs):
     # 2. calculate loss
     loss = loss_fn(y_preds, y_train)
     print("loss:", loss.item())
+    loss_values.append(loss.item())
 
     # 3. Optimizer zero gradients
     optimizer.zero_grad()
@@ -179,8 +185,31 @@ for epoch in range(epochs):
             # 2. calculate loss
             loss_test = loss_fn(y_preds_test, y_test)
             print(f"test loss: {loss_test.item():.4f}")
+            test_loss_values.append(loss_test.item())
+            epoch_count.append(epoch)
 
 plot_predictions(predictions=y_preds_initial)
 with torch.inference_mode():
     y_preds = model_0(X_test)
     plot_predictions(predictions=y_preds)
+
+print(model_0.state_dict())
+
+# Plot loss curves
+plt.figure(figsize=(10, 7))
+plt.scatter(range(len(loss_values)), loss_values, label="training loss", c="b")
+plt.scatter(epoch_count, test_loss_values, label="test loss", c="r")
+plt.ylabel("Loss")
+plt.xlabel("Epoch")
+plt.grid()
+plt.legend()
+plt.show()
+
+# Saving a model (and loading it)
+# There are 3 main methods for saving and loading models in PyTorch
+# 1. torch.save() - saves a serialized object to disk (using Python's pickle utility for serialization)
+# 2. torch.load() - uses pickle's unpickling facilities to deserialize pickled object files to memory
+# 3. torch.nn.Module.load_state_dict() - loads a model's parameter dictionary using a deserialized state_dict
+
+# Save model
+torch.save(model_0.state_dict(), "model_0.pth")
