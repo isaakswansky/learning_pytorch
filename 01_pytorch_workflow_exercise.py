@@ -72,7 +72,7 @@ model.eval()
 print(model.state_dict())
 with torch.inference_mode():
     pred = model(Y_test)
-    
+
 plot_data(predictions=pred.cpu())
 plt.figure()
 plt.plot(epochs, losses, label="training loss")
