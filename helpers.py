@@ -74,7 +74,18 @@ def accuracy(y_train, y_pred):
 def do_nothing(x):
     return x
 
-def train_and_test(epochs, model: nn.Module, loss_fn, optimizer, X_train, y_train, X_test, y_test, transformation=do_nothing, accuracy=None):
+def train_and_test(
+        epochs: int,
+        model: nn.Module,
+        loss_fn,
+        optimizer,
+        X_train: torch.Tensor,
+        y_train: torch.Tensor,
+        X_test: torch.Tensor,
+        y_test: torch.Tensor,
+        transformation=do_nothing,
+        log_interval: int=10,
+        metrics:dict=dict()):
     for epoch in range(epochs):
         # Activate training mode
         model.train()
@@ -88,10 +99,9 @@ def train_and_test(epochs, model: nn.Module, loss_fn, optimizer, X_train, y_trai
         y_pred = transformation(y_pred_raw)
 
         # Calculate accuracy
-        if accuracy is not None:
-            acc = accuracy(y_train, y_pred)
-        else:
-            acc = 0
+        training_metrics = {}
+        for metric_name, metric_fn in metrics.items():
+            training_metrics[metric_name] = metric_fn(y_train, y_pred)
 
         # Zero the gradients
         optimizer.zero_grad()
@@ -108,14 +118,18 @@ def train_and_test(epochs, model: nn.Module, loss_fn, optimizer, X_train, y_trai
             y_test_raw = model(X_test).squeeze()
             y_test_pred = transformation(y_test_raw)
             test_loss = loss_fn(y_test_raw, y_test.squeeze())
-            if accuracy is not None:
-                test_acc = accuracy(y_test, y_test_pred)
-            else:
-                test_acc = 0
+            test_metrics = {}
+            for metric_name, metric_fn in metrics.items():
+                test_metrics[metric_name] = metric_fn(y_test, y_test_pred)
 
         # Print some results
-        if (epoch + 1) % 10 == 0:
-            print("===============================================")
-            print(f"Epoch [{epoch + 1}/{epochs}]")
-            print(f"Training Loss: {loss.item():.4f}, Training Accuracy: {acc:.2f}%")
-            print(f"Test Loss: {test_loss.item():.4f}, Test Accuracy: {test_acc:.2f}%")
+        if (epoch) % log_interval == 0:
+            print(f"====================== Epoch [{epoch + 1}/{epochs}] =========================")
+            print(f" - Training:")
+            print(f"     - Loss: {loss.item():.4f}")
+            for metric_name, metric_value in training_metrics.items():
+                print(f"     - {metric_name}: {metric_value:.4f}")
+            print(f" - Testing:")
+            print(f"     - Loss: {test_loss.item():.4f}")
+            for metric_name, metric_value in test_metrics.items():
+                print(f"     - {metric_name}: {metric_value:.4f}")

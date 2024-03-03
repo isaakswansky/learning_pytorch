@@ -9,7 +9,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from helpers import plot_decision_boundary, train_and_test, accuracy
-from circlemodel import CircleModelV1, CircleModelV2
+from circlemodel import CircleModelV1, CircleModelV2, CircleModelV3
 
 random_seed = 42
 torch.manual_seed(random_seed)
@@ -121,10 +121,10 @@ plot_decision_boundary(model_0, X_test, y_test)
 # - (Change the data)
 
 # see circlemodel.py for adjusted model code
-model_1 = CircleModelV2().to(device)
+model_1 = CircleModelV3().to(device)
 
 train_and_test(
-    epochs=10000,
+    epochs=5000,
     model=model_1,
     loss_fn=loss_fn,
     transformation=transform_output,
@@ -133,7 +133,7 @@ train_and_test(
     y_train=y_train,
     X_test=X_test,
     y_test=y_test,
-    accuracy=accuracy
+    metrics={"accuracy": accuracy}
     )
 # Visualize model 1
 fig = plt.figure(figsize=(12, 6))
