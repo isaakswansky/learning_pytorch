@@ -133,3 +133,62 @@ def train_and_test(
             print(f"     - Loss: {test_loss.item():.4f}")
             for metric_name, metric_value in test_metrics.items():
                 print(f"     - {metric_name}: {metric_value:.4f}")
+
+
+def cv_train_step(
+        model: nn.Module,
+        data_loader: torch.utils.data.DataLoader,
+        loss_fn: nn.Module,
+        optimizer: torch.optim.Optimizer,
+        accuracy_fn,
+        device: torch.device
+        ):
+    train_loss = 0.0
+    train_accuracy = 0.0
+    model.to(device)
+    model.train()
+    for X, y in data_loader:
+        X, y = X.to(device), y.to(device)
+
+        # Forward pass
+        y_pred = model(X)
+        loss = loss_fn(y_pred, y)
+        train_loss += loss
+        train_accuracy += accuracy_fn(y, y_pred.argmax(dim=1))
+
+        # Zero gradients, backward pass, update weights
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    train_loss /= len(data_loader)
+    train_accuracy /= len(data_loader)
+    print(f"Training loss: {train_loss:.5f}")
+    print(f"Training accuracy: {train_accuracy:.2f}")
+
+def cv_test_step(
+        model: nn.Module,
+        data_loader: torch.utils.data.DataLoader,
+        loss_fn: nn.Module,
+        accuracy_fn,
+        device: torch.device
+        ):
+    test_loss = 0.0
+    test_accuracy = 0.0
+    model.to(device)
+    model.eval()
+    with torch.inference_mode():
+        for X, y in data_loader:
+            X, y = X.to(device), y.to(device)
+
+            # Forward pass
+            y_pred = model(X)
+            test_loss += loss_fn(y_pred, y)
+            test_accuracy += accuracy_fn(y, y_pred.argmax(dim=1))
+
+        test_loss /= len(data_loader)
+        test_accuracy /= len(data_loader)
+        print(f"Test loss: {test_loss:.5f}")
+        print(f"Test accuracy: {test_accuracy:.2f}")
+
+
